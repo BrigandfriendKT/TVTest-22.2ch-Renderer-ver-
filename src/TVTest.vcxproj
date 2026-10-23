@@ -170,8 +170,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -225,8 +225,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -285,8 +285,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -348,8 +348,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -411,8 +411,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -474,8 +474,8 @@
       <AdditionalIncludeDirectories>$(IntDir);Resource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LibISDB.lib;LibISDBWindows.lib;%(AdditionalDependencies);Bcrypt.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)LibISDB\Projects\$(Platform)\$(Configuration)\;$(IntDir);%(AdditionalLibraryDirectories);$(SolutionDir)LibISDB\Thirdparty\ffmpeg-min\lib\</AdditionalLibraryDirectories>
       <EnableUAC>false</EnableUAC>
       <DelayLoadDLLs>evr.dll;mf.dll;mfplat.dll;d3d9.dll;dxva2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>false</GenerateDebugInformation>
