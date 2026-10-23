@@ -26,6 +26,7 @@
 #include "EpgUtil.h"
 #include "resource.h"
 #include <algorithm>
+#include <fstream>
 #include "Common/DebugDef.h"
 
 
@@ -54,6 +55,96 @@ static void FormatDouble(double Value, LPTSTR pszString, size_t MaxString)
 }
 
 
+namespace
+{
+
+	// LatmDownmixPresets.ini (TVTest.exeと同じフォルダ)から、
+	// [Preset:名前] セクションの「名前」一覧を取得する。
+	//
+	// 本来の解析(LibISDB::DirectShow::LatmDownmix)はAACデコーダ側
+	// (libav依存)にあるが、プリセット名を一覧表示したいだけのここでは
+	// libavへの依存を増やしたくないため、ごく簡単なテキスト走査を
+	// 別途ここに用意している。iniが無い/読めない場合は空リストを返す
+	std::vector<String> EnumerateLatmDownmixPresetNames()
+	{
+		std::vector<String> Names;
+
+		String Path;
+		if (!GetAppClass().GetAppDirectory(&Path))
+			return Names;
+		Path += TEXT("\\LatmDownmixPresets.ini");
+
+		std::ifstream File(Path, std::ios::binary);
+		if (!File.is_open())
+			return Names;
+
+		std::vector<char> Bytes(
+			(std::istreambuf_iterator<char>(File)), std::istreambuf_iterator<char>());
+
+		size_t Offset = 0;
+		if ((Bytes.size() >= 3) &&
+				(static_cast<unsigned char>(Bytes[0]) == 0xEF) &&
+				(static_cast<unsigned char>(Bytes[1]) == 0xBB) &&
+				(static_cast<unsigned char>(Bytes[2]) == 0xBF)) {
+			Offset = 3;
+		}
+		if (Bytes.size() <= Offset)
+			return Names;
+
+		const int Length = ::MultiByteToWideChar(
+			CP_UTF8, 0, Bytes.data() + Offset, static_cast<int>(Bytes.size() - Offset), nullptr, 0);
+		if (Length <= 0)
+			return Names;
+		std::wstring Text(static_cast<size_t>(Length), L'\0');
+		::MultiByteToWideChar(
+			CP_UTF8, 0, Bytes.data() + Offset, static_cast<int>(Bytes.size() - Offset), Text.data(), Length);
+
+		constexpr wchar_t Prefix[] = L"Preset:";
+		constexpr size_t PrefixLength = (sizeof(Prefix) / sizeof(Prefix[0])) - 1;
+
+		size_t Pos = 0;
+		while (Pos <= Text.size()) {
+			const size_t NewLine = Text.find(L'\n', Pos);
+			std::wstring Line = (NewLine == std::wstring::npos)
+				? Text.substr(Pos) : Text.substr(Pos, NewLine - Pos);
+			Pos = (NewLine == std::wstring::npos) ? (Text.size() + 1) : (NewLine + 1);
+
+			if (!Line.empty() && (Line.back() == L'\r'))
+				Line.pop_back();
+			const size_t CommentPos = Line.find_first_of(L";#");
+			if (CommentPos != std::wstring::npos)
+				Line = Line.substr(0, CommentPos);
+
+			size_t Begin = Line.find_first_not_of(L" \t");
+			if (Begin == std::wstring::npos)
+				continue;
+			size_t End = Line.find_last_not_of(L" \t");
+			Line = Line.substr(Begin, End - Begin + 1);
+
+			if ((Line.size() < 2) || (Line.front() != L'[') || (Line.back() != L']'))
+				continue;
+			std::wstring Name = Line.substr(1, Line.size() - 2);
+			Begin = Name.find_first_not_of(L" \t");
+			if (Begin == std::wstring::npos)
+				continue;
+			End = Name.find_last_not_of(L" \t");
+			Name = Name.substr(Begin, End - Begin + 1);
+
+			if ((Name.size() <= PrefixLength) || (Name.compare(0, PrefixLength, Prefix) != 0))
+				continue;
+			String PresetName = Name.substr(PrefixLength);
+			if (PresetName.empty())
+				continue;
+			if (std::find_if(
+					Names.begin(), Names.end(),
+					[&](const String &s) { return StringUtility::IsEqualNoCase(s, PresetName); }) == Names.end())
+				Names.push_back(std::move(PresetName));
+		}
+
+		return Names;
+	}
+
+}	// namespace
 
 
 const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix CAudioOptions::m_DefaultSurroundMixingMatrix = {
@@ -108,6 +199,13 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 		m_SPDIFOptions.Mode = static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(SpdifMode);
 	Settings.Read(TEXT("SpdifChannels"), &m_SPDIFOptions.PassthroughChannels);
 	Settings.Read(TEXT("DownMixSurround"), &m_fDownMixSurround);
+	Settings.Read(TEXT("LatmDownmixChannels"), &m_LatmDownmixChannels);
+	if ((m_LatmDownmixChannels != 8) && (m_LatmDownmixChannels != 6) && (m_LatmDownmixChannels != 0))
+		m_LatmDownmixChannels = 8;
+	Settings.Read(TEXT("AudioOutputMode"), &m_AudioOutputMode);
+	if ((m_AudioOutputMode != 0) && (m_AudioOutputMode != 1))
+		m_AudioOutputMode = 0;
+	Settings.Read(TEXT("LatmDownmixPresetName"), &m_LatmDownmixPresetName);
 
 	Settings.Read(TEXT("UseCustomSurroundMixingMatrix"), &m_fUseCustomSurroundMixingMatrix);
 	String Buffer;
@@ -170,6 +268,9 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SpdifMode"), static_cast<int>(m_SPDIFOptions.Mode));
 	Settings.Write(TEXT("SpdifChannels"), m_SPDIFOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"), m_fDownMixSurround);
+	Settings.Write(TEXT("LatmDownmixChannels"), m_LatmDownmixChannels);
+	Settings.Write(TEXT("AudioOutputMode"), m_AudioOutputMode);
+	Settings.Write(TEXT("LatmDownmixPresetName"), m_LatmDownmixPresetName);
 
 	Settings.Write(TEXT("UseCustomSurroundMixingMatrix"), m_fUseCustomSurroundMixingMatrix);
 	String Buffer;
@@ -241,6 +342,13 @@ bool CAudioOptions::ApplyMediaViewerOptions()
 	pViewer->SetAACDecoderType(m_AACDecoder);
 
 	pViewer->SetDownMixSurround(m_fDownMixSurround);
+	pViewer->SetLatmDownmixChannels(m_LatmDownmixChannels);
+	pViewer->SetAudioOutputMode(
+		m_AudioOutputMode == 1 ?
+			LibISDB::ViewerFilter::AudioOutputMode::Matrix :
+			LibISDB::ViewerFilter::AudioOutputMode::Auto);
+	pViewer->SetLatmDownmixPresetName(
+		m_LatmDownmixPresetName.empty() ? nullptr : m_LatmDownmixPresetName.c_str());
 
 	LibISDB::COMPointer<LibISDB::DirectShow::AudioDecoderFilter> AudioFilter(pViewer->GetAudioDecoderFilter());
 	if (AudioFilter) {
@@ -371,6 +479,58 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				m_SPDIFOptions.Mode == LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Auto);
 
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_DOWNMIXSURROUND, m_fDownMixSurround);
+
+			static const LPCTSTR LatmDownmixList[] = {
+				TEXT("7.1ch"),
+				TEXT("5.1ch"),
+				TEXT("2ch"),
+				TEXT("ダウンミックスを行わない"),
+			};
+			for (LPCTSTR pszItem : LatmDownmixList)
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_LATMDOWNMIX, pszItem);
+			// コンボボックスの並び(7.1ch/5.1ch/2ch/行わない) <-> 設定値(8/6/2/0) の対応
+			DlgComboBox_SetCurSel(
+				hDlg, IDC_OPTIONS_LATMDOWNMIX,
+				m_LatmDownmixChannels == 8 ? 0 :
+				m_LatmDownmixChannels == 6 ? 1 :
+				m_LatmDownmixChannels == 2 ? 2 : 3);
+
+			// 「ダウンミックスを行わない」を選んだ場合の出力方式
+			//   0=自動(Windows空間オーディオが使えればそちらを優先)
+			//   1=常にチャンネルマトリクス(7.1ch/5.1ch)で出力する
+			static const LPCTSTR AudioOutputModeList[] = {
+				TEXT("自動(空間オーディオを優先)"),
+				TEXT("チャンネルマトリクスのみ"),
+			};
+			for (LPCTSTR pszItem : AudioOutputModeList)
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOOUTPUTMODE, pszItem);
+			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIOOUTPUTMODE, m_AudioOutputMode);
+
+			// LatmDownmixPresets.ini中の [Preset:名前] を一覧表示する。
+			// 先頭の「(自動)」を選ぶと、ダウンミックス先ch数から決まる
+			// 既定のプリセット("7.1ch"/"5.1ch"/"2ch")が使われる
+			{
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_LATMDOWNMIX_PRESET, TEXT("(自動)"));
+				int Sel = 0;
+				std::vector<String> PresetNames = EnumerateLatmDownmixPresetNames();
+				if (!m_LatmDownmixPresetName.empty() &&
+						(std::find_if(
+							PresetNames.begin(), PresetNames.end(),
+							[&](const String &s) {
+								return StringUtility::IsEqualNoCase(s, m_LatmDownmixPresetName);
+							}) == PresetNames.end())) {
+					// iniから見つからなかった(iniが無い/編集された等)名前でも、
+					// 設定が消えてしまわないよう一覧に加えておく
+					PresetNames.push_back(m_LatmDownmixPresetName);
+				}
+				for (size_t i = 0; i < PresetNames.size(); i++) {
+					DlgComboBox_AddString(hDlg, IDC_OPTIONS_LATMDOWNMIX_PRESET, PresetNames[i].c_str());
+					if (!m_LatmDownmixPresetName.empty() &&
+							StringUtility::IsEqualNoCase(PresetNames[i], m_LatmDownmixPresetName))
+						Sel = static_cast<int>(i) + 1;
+				}
+				DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_LATMDOWNMIX_PRESET, Sel);
+			}
 
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY, m_fEnableLanguagePriority);
 
@@ -547,6 +707,28 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				m_fDownMixSurround =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_DOWNMIXSURROUND);
+
+				{
+					// コンボボックスの並び(7.1ch/5.1ch/2ch/行わない) <-> 設定値(8/6/2/0) の対応
+					static const int LatmDownmixValues[] = {8, 6, 2, 0};
+					const int Sel = DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_LATMDOWNMIX);
+					if ((Sel >= 0) && (Sel < static_cast<int>(lengthof(LatmDownmixValues))))
+						m_LatmDownmixChannels = LatmDownmixValues[Sel];
+				}
+
+				{
+					const int Sel = DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOOUTPUTMODE);
+					if ((Sel == 0) || (Sel == 1))
+						m_AudioOutputMode = Sel;
+				}
+
+				{
+					const int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_LATMDOWNMIX_PRESET));
+					String PresetName;
+					if (Sel > 0)
+						GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_LATMDOWNMIX_PRESET, Sel, &PresetName);
+					m_LatmDownmixPresetName = std::move(PresetName);
+				}
 
 				m_fEnableLanguagePriority =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);

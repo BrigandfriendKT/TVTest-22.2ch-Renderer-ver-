@@ -65,6 +65,11 @@ namespace TVTest
 		const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &GetSpdifOptions() const { return m_SPDIFOptions; }
 		bool SetSpdifOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
 		bool GetDownMixSurround() const { return m_fDownMixSurround; }
+		int GetLatmDownmixChannels() const { return m_LatmDownmixChannels; }
+		int GetAudioOutputMode() const { return m_AudioOutputMode; }
+		// 空文字列の場合、GetLatmDownmixChannels()の値から決まる既定の
+		// プリセット名("7.1ch"/"5.1ch"/"2ch")が使われる
+		const String &GetLatmDownmixPresetName() const { return m_LatmDownmixPresetName; }
 		bool GetEnableLanguagePriority() const { return m_fEnableLanguagePriority; }
 		const AudioLanguageList &GetLanguagePriority() const { return m_LanguagePriority; }
 		bool GetResetAudioDelayOnChannelChange() const { return m_fResetAudioDelayOnChannelChange; }
@@ -99,6 +104,11 @@ namespace TVTest
 			LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled,
 			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Surround};
 		bool m_fDownMixSurround = true;
+		int m_LatmDownmixChannels = 8; // 22.2ch等のダウンミックス先。8=7.1ch, 6=5.1ch, 2=2ch, 0=行わない
+		int m_AudioOutputMode = 0; // 22.2ch「ダウンミックスしない」時の出力方式。0=自動(空間オーディオ優先), 1=チャンネルマトリクスのみ
+		// LatmDownmixPresets.iniで定義したプリセットを明示的に使う場合の名前。
+		// 空文字列なら、ダウンミックス先ch数から決まる既定名("7.1ch"等)を使う
+		String m_LatmDownmixPresetName;
 		bool m_fUseCustomSurroundMixingMatrix = false;
 		LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix m_SurroundMixingMatrix{m_DefaultSurroundMixingMatrix};
 		bool m_fUseCustomDownMixMatrix = false;
