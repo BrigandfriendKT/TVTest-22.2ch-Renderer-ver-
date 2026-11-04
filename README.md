@@ -1,5 +1,11 @@
-# TVTest-22.2ch-Renderer-ver-
+# TVTest-22.2ch-Renderer-ver-<br>
 
+【更新履歴】<br>
+
+v1.0.1
+ tvtestの音量バーが利用できないバグを修正<br>
+ 
+---
 8Kの22.2ch番組をダウンミックスもしくは<br>
 Dolby atmos、windows sonic for headphonesにて再生できるようにしたものです。
 
