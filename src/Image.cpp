@@ -141,12 +141,15 @@ HGLOBAL ResizeImage(
 	const int DstXCenter = ((Width - 1) << 8) / 2;
 	const int DstYCenter = ((Height - 1) << 8) / 2;
 
-	for (int x = 0; x < Width; x++) {
-		SrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
-		if (SrcPos[x] < 0)
-			SrcPos[x] = 0;
-		else if (SrcPos[x] > (SrcWidth - 1) << 8)
-			SrcPos[x] = (SrcWidth - 1) << 8;
+		for (int x = 0; x < Width; x++) {
+		long long Pos =
+			((static_cast<long long>(x) << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
+		const long long MaxPos = static_cast<long long>(SrcWidth - 1) << 8;
+		if (Pos < 0)
+			Pos = 0;
+		else if (Pos > MaxPos)
+			Pos = MaxPos;
+		SrcPos[x] = static_cast<int>(Pos);
 	}
 	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
 	const std::size_t DstPadBytes = DIB_ROW_BYTES(Width, 24) - Width * 3;
@@ -155,16 +158,14 @@ HGLOBAL ResizeImage(
 			(pbmiSrc->bmiHeader.biHeight > 0 ? (pbmiSrc->bmiHeader.biHeight - (SrcHeight + SrcTop)) : SrcTop) * SrcRowBytes;
 	BYTE *q = static_cast<BYTE*>(pDstData);
 	for (int y = 0; y < Height; y++) {
-		int y1 = ((y << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
-		if (y1 < 0)
-			y1 = 0;
-		else if (y1 > (SrcHeight - 1) << 8)
-			y1 = (SrcHeight - 1) << 8;
-		const int dy2 = y1 & 0xFF;
-		const int dy1 = 0x100 - dy2;
-		const std::size_t YOffset = dy2 > 0 ? SrcRowBytes : 0;
-		for (int x = 0; x < Width; x++) {
-			const int x1 = SrcPos[x];
+		long long y1ll =
+			((static_cast<long long>(y) << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
+		const long long MaxY = static_cast<long long>(SrcHeight - 1) << 8;
+		if (y1ll < 0)
+			y1ll = 0;
+		else if (y1ll > MaxY)
+			y1ll = MaxY;
+		const int y1 = static_cast<int>(y1ll);
 			const int dx2 = x1 & 0xFF;
 			const int dx1 = 0x100 - dx2;
 			const BYTE *p = static_cast<const BYTE*>(pSrcData) + (y1 >> 8) * SrcRowBytes +
